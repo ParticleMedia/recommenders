@@ -28,8 +28,7 @@ batch_size = 32
 MIND_type = 'demo'
 
 """Download and load data"""
-tmpdir = TemporaryDirectory()
-data_path = tmpdir.name
+data_path = os.path.join(os.path.dirname(__file__), "data")
 
 train_news_file = os.path.join(data_path, 'train', r'news.tsv')
 train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
