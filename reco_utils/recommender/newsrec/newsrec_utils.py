@@ -282,6 +282,7 @@ def create_hparams(flags):
         # show info
         show_step=flags.get("show_step", 1),
         metrics=flags.get("metrics", None),
+        run_eagerly=flags.get("run_eagerly", None)
     )
 
 

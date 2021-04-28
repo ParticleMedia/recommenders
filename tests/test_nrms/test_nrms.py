@@ -58,7 +58,8 @@ hparams = prepare_hparams(yaml_file,
                           userDict_file=userDict_file,
                           batch_size=batch_size,
                           epochs=epochs,
-                          show_step=10)
+                          show_step=10,
+                          run_eagerly=True)
 print(hparams)
 
 

@@ -74,7 +74,7 @@ class BaseModel:
         self.loss = self._get_loss()
         self.train_optimizer = self._get_opt()
 
-        self.model.compile(loss=self.loss, optimizer=self.train_optimizer)
+        self.model.compile(loss=self.loss, optimizer=self.train_optimizer, run_eagerly=hparams.run_eagerly)
 
     def _init_embedding(self, file_path):
         """Load pre-trained embeddings as a constant tensor.

@@ -169,7 +169,9 @@ class NRMSModel(BaseModel):
 
         titleencoder = self._build_newsencoder(embedding_layer)
         self.userencoder = self._build_userencoder(titleencoder)
+        self.userencoder.compile(run_eagerly=self.hparams.run_eagerly)
         self.newsencoder = titleencoder
+        self.newsencoder.compile(run_eagerly=self.hparams.run_eagerly)
 
         user_present = self.userencoder(his_input_title)
         news_present = layers.TimeDistributed(self.newsencoder)(pred_input_title)
