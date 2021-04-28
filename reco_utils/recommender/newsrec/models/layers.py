@@ -6,7 +6,6 @@ import tensorflow.keras as keras
 from tensorflow.keras import layers
 from tensorflow.keras import backend as K
 
-
 class AttLayer2(layers.Layer):
     """Soft alignment attention implement.
 
@@ -235,9 +234,10 @@ class SelfAttention(layers.Layer):
         A = K.batch_dot(Q_seq, K_seq, axes=[3, 3]) / K.sqrt(
             K.cast(self.head_dim, dtype="float32")
         )
+        A = K.sum(A, axis=3)
         A = K.permute_dimensions(
             A, pattern=(0, 3, 2, 1)
-        )  # A.shape=[batch_size,K_sequence_length,Q_sequence_length,self.multiheads]
+        )  # A.shape=[batch_size,K_sequence_length,self.multiheads,Q_sequence_length,self.multiheads]
 
         A = self.Mask(A, V_len, "add")
         A = K.permute_dimensions(A, pattern=(0, 3, 2, 1))
@@ -250,6 +250,7 @@ class SelfAttention(layers.Layer):
         A = K.softmax(A)
 
         O_seq = K.batch_dot(A, V_seq, axes=[3, 2])
+        O_seq = K.sum(O_seq, axis=3)
         O_seq = K.permute_dimensions(O_seq, pattern=(0, 2, 1, 3))
 
         O_seq = K.reshape(O_seq, shape=(-1, K.shape(O_seq)[1], self.output_dim))
