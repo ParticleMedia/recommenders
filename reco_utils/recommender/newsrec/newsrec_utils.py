@@ -24,6 +24,7 @@ import json
 import pickle as pkl
 import random
 import re
+import collections
 
 
 def check_type(config):
@@ -219,6 +220,13 @@ def check_nn_config(f_config):
     check_type(f_config)
 
 
+def make_namedtuple(**kwargs):
+    keys = list(kwargs.keys())
+    values = [kwargs.get(x) for x in keys]
+    HPs = collections.namedtuple("HPs", keys)
+    hps = HPs(*values)
+    return hps
+
 def create_hparams(flags):
     """Create the model hyperparameters.
 
@@ -228,7 +236,7 @@ def create_hparams(flags):
     Returns:
         obj: Hyperparameter object in TF (tf.contrib.training.HParams).
     """
-    return tf.contrib.training.HParams(
+    return make_namedtuple(
         # data
         data_format=flags.get("data_format", None),
         iterator_type=flags.get("iterator_type", None),
