@@ -132,7 +132,12 @@ class SelfAttention(layers.Layer):
         self.output_dim = multiheads * head_dim
         self.mask_right = mask_right
         self.seed = seed
+        self.diag_mask = self._set_diag_mask()
         super(SelfAttention, self).__init__(**kwargs)
+
+    def _set_diag_mask(self):
+        diag_mask = tf.linalg.diag(tf.ones([self.multiheads]))
+        return tf.reshape(diag_mask, [1, self.multiheads, 1, self.multiheads, 1])
 
     def compute_output_shape(self, input_shape):
         """Compute shape of output tensor.
@@ -234,6 +239,7 @@ class SelfAttention(layers.Layer):
         A = K.batch_dot(Q_seq, K_seq, axes=[3, 3]) / K.sqrt(
             K.cast(self.head_dim, dtype="float32")
         )
+        A = A * self.diag_mask
         A = K.sum(A, axis=3)
         A = K.permute_dimensions(
             A, pattern=(0, 3, 2, 1)
@@ -250,6 +256,7 @@ class SelfAttention(layers.Layer):
         A = K.softmax(A)
 
         O_seq = K.batch_dot(A, V_seq, axes=[3, 2])
+        O_seq = O_seq * self.diag_mask
         O_seq = K.sum(O_seq, axis=3)
         O_seq = K.permute_dimensions(O_seq, pattern=(0, 2, 1, 3))
 

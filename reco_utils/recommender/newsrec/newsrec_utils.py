@@ -282,7 +282,8 @@ def create_hparams(flags):
         # show info
         show_step=flags.get("show_step", 1),
         metrics=flags.get("metrics", None),
-        run_eagerly=flags.get("run_eagerly", None)
+        run_eagerly=flags.get("run_eagerly", None),
+        current_epoch=None
     )
 
 
@@ -373,4 +374,3 @@ def get_mind_data_set(type):
             "MINDdemo_dev.zip",
             "MINDdemo_utils.zip",
         )
-
