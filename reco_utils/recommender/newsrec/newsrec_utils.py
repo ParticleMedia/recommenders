@@ -25,6 +25,7 @@ import pickle as pkl
 import random
 import re
 import collections
+from recordtype import recordtype
 
 
 def check_type(config):
@@ -223,7 +224,7 @@ def check_nn_config(f_config):
 def make_namedtuple(**kwargs):
     keys = list(kwargs.keys())
     values = [kwargs.get(x) for x in keys]
-    HPs = collections.namedtuple("HPs", keys)
+    HPs = recordtype("HPs", keys)
     hps = HPs(*values)
     return hps
 
