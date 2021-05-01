@@ -60,7 +60,6 @@ hparams = prepare_hparams(yaml_file,
 print(hparams)
 
 out_dir = sys.argv[1]
-'''
 random.seed(seed)
 np.random.seed(seed)
 iterator = MINDIterator(hparams, npratio=npratio)
@@ -78,7 +77,7 @@ for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_fil
     if i > 5000:
         break
 out_f.close()
-'''
+
 random.seed(seed)
 np.random.seed(seed)
 iterator = MINDIterator(hparams, npratio=npratio)
