@@ -20,6 +20,7 @@ print("Tensorflow version: {}".format(tf.__version__))
 seed = 42
 batch_size = 3
 npratio = 4
+instance_count = 5000
 
 # Options: demo, small, large
 MIND_type = 'demo'
@@ -63,7 +64,8 @@ np.random.seed(seed)
 
 iterator = MINDIterator(hparams, npratio=npratio)
 
-out_f = open("./tf_seed_42_npratio_5_batch_3", "w", encoding="UTF8")
+out_dir = sys.argv[1]
+out_f = open(f"{out_dir}/tf_train_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
 for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_file, train_behaviors_file)):
     labels = batch_data_input["labels"]
     labels = labels.tolist()
@@ -74,4 +76,22 @@ for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_fil
     m = {"labels": labels, "features": [{"histories": clicked_title_batch, "impressions": candidate_title_batch}]}
     m_str = json.dumps(m)
     out_f.write(m_str + "\n")
+    if i > 5000:
+        break
+out_f.close()
+
+
+out_f = open(f"{out_dir}/tf_valid_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
+for i, batch_data_input in enumerate(iterator.load_data_from_file(valid_news_file, valid_behaviors_file)):
+    labels = batch_data_input["labels"]
+    labels = labels.tolist()
+    clicked_title_batch = batch_data_input['clicked_title_batch']
+    clicked_title_batch = clicked_title_batch.tolist()
+    candidate_title_batch = batch_data_input['candidate_title_batch']
+    candidate_title_batch = candidate_title_batch.tolist()
+    m = {"labels": labels, "features": [{"histories": clicked_title_batch, "impressions": candidate_title_batch}]}
+    m_str = json.dumps(m)
+    out_f.write(m_str + "\n")
+    if i > 5000:
+        break
 out_f.close()
