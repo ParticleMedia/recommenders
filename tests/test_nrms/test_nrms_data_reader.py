@@ -89,7 +89,7 @@ for i, batch_data_input in enumerate(iterator.load_data_from_file(valid_news_fil
     clicked_title_batch = clicked_title_batch.tolist()
     candidate_title_batch = batch_data_input['candidate_title_batch']
     candidate_title_batch = candidate_title_batch.tolist()
-    m = {"labels": labels, "features": [{"histories": clicked_title_batch, "impressions": candidate_title_batch}]}
+    m = {"labels": labels, "features": {"histories": clicked_title_batch, "impressions": candidate_title_batch}}
     m_str = json.dumps(m)
     out_f.write(m_str + "\n")
     if i > 5000:
