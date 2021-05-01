@@ -59,12 +59,12 @@ hparams = prepare_hparams(yaml_file,
                           run_eagerly=True)
 print(hparams)
 
-random.seed(seed)
-np.random.seed(seed)
-
 iterator = MINDIterator(hparams, npratio=npratio)
 
 out_dir = sys.argv[1]
+
+random.seed(seed)
+np.random.seed(seed)
 out_f = open(f"{out_dir}/tf_train_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
 for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_file, train_behaviors_file)):
     labels = batch_data_input["labels"]
@@ -80,7 +80,8 @@ for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_fil
         break
 out_f.close()
 
-
+random.seed(seed)
+np.random.seed(seed)
 out_f = open(f"{out_dir}/tf_valid_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
 for i, batch_data_input in enumerate(iterator.load_data_from_file(valid_news_file, valid_behaviors_file)):
     labels = batch_data_input["labels"]
