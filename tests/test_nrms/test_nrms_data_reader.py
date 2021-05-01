@@ -68,7 +68,7 @@ out_dir = sys.argv[1]
 out_f = open(f"{out_dir}/tf_train_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
 for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_file, train_behaviors_file)):
     labels = batch_data_input["labels"]
-    labels = labels.tolist()
+    labels = labels.astype(int).tolist()
     clicked_title_batch = batch_data_input['clicked_title_batch']
     clicked_title_batch = clicked_title_batch.tolist()
     candidate_title_batch = batch_data_input['candidate_title_batch']
@@ -84,7 +84,7 @@ out_f.close()
 out_f = open(f"{out_dir}/tf_valid_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
 for i, batch_data_input in enumerate(iterator.load_data_from_file(valid_news_file, valid_behaviors_file)):
     labels = batch_data_input["labels"]
-    labels = labels.tolist()
+    labels = labels.astype(int).tolist()
     clicked_title_batch = batch_data_input['clicked_title_batch']
     clicked_title_batch = clicked_title_batch.tolist()
     candidate_title_batch = batch_data_input['candidate_title_batch']
