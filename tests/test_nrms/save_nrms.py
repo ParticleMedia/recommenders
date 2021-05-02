@@ -1,15 +1,13 @@
-"""Global settings and imports"""
 import sys
 sys.path.append("../../")
 import os
-import numpy as np
-import random
-import tensorflow as tf
 import json
+import tensorflow as tf
 tf.get_logger().setLevel('ERROR') # only show error messages
 
 from reco_utils.recommender.deeprec.deeprec_utils import download_deeprec_resources
 from reco_utils.recommender.newsrec.newsrec_utils import prepare_hparams
+from reco_utils.recommender.newsrec.models.nrms import NRMSModel
 from reco_utils.recommender.newsrec.io.mind_iterator import MINDIterator
 from reco_utils.recommender.newsrec.newsrec_utils import get_mind_data_set
 
@@ -17,10 +15,9 @@ print("System version: {}".format(sys.version))
 print("Tensorflow version: {}".format(tf.__version__))
 
 """Prepare parameters"""
+epochs = 5
 seed = 42
-batch_size = 3
-npratio = 4
-instance_count = 5000
+batch_size = 32
 
 # Options: demo, small, large
 MIND_type = 'demo'
@@ -49,49 +46,24 @@ if not os.path.exists(yaml_file):
     download_deeprec_resources(r'https://recodatasets.z20.web.core.windows.net/newsrec/', \
                                os.path.join(data_path, 'utils'), mind_utils)
 
+"""Create hyper-parameters"""
 hparams = prepare_hparams(yaml_file,
                           wordEmb_file=wordEmb_file,
                           wordDict_file=wordDict_file,
                           userDict_file=userDict_file,
                           batch_size=batch_size,
-                          epochs=1,
+                          epochs=epochs,
                           show_step=10,
                           run_eagerly=True)
 print(hparams)
 
-out_dir = sys.argv[1]
-random.seed(seed)
-np.random.seed(seed)
-iterator = MINDIterator(hparams, npratio=npratio)
-out_f = open(f"{out_dir}/tf_train_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
-for i, batch_data_input in enumerate(iterator.load_data_from_file(train_news_file, train_behaviors_file)):
-    labels = batch_data_input["labels"]
-    labels = labels.astype(int).tolist()
-    clicked_title_batch = batch_data_input['clicked_title_batch']
-    clicked_title_batch = clicked_title_batch.tolist()
-    candidate_title_batch = batch_data_input['candidate_title_batch']
-    candidate_title_batch = candidate_title_batch.tolist()
-    m = {"labels": labels, "features": [{"histories": clicked_title_batch, "impressions": candidate_title_batch}]}
-    m_str = json.dumps(m)
-    out_f.write(m_str + "\n")
-    if i > 5000:
-        break
-out_f.close()
 
-random.seed(seed)
-np.random.seed(seed)
-iterator = MINDIterator(hparams, npratio=npratio)
-out_f = open(f"{out_dir}/tf_valid_seed_{seed}_npratio_{npratio + 1}_batch_{batch_size}_{instance_count}", "w", encoding="UTF8")
-for i, batch_data_input in enumerate(iterator.load_data_from_file(valid_news_file, valid_behaviors_file)):
-    labels = batch_data_input["labels"]
-    labels = labels.astype(int).tolist()
-    clicked_title_batch = batch_data_input['clicked_title_batch']
-    clicked_title_batch = clicked_title_batch.tolist()
-    candidate_title_batch = batch_data_input['candidate_title_batch']
-    candidate_title_batch = candidate_title_batch.tolist()
-    m = {"labels": labels, "features": [{"history": clicked_title_batch, "present": candidate_title_batch}]}
-    m_str = json.dumps(m)
-    out_f.write(m_str + "\n")
-    if i > 5000:
-        break
-out_f.close()
+"""Train the NRMS model"""
+iterator = MINDIterator
+NRMSModel.global_parameters = {}
+model = NRMSModel(hparams, iterator, seed=seed)
+parameters_str = json.dumps(NRMSModel.global_parameters)
+model_file = os.path.join(sys.argv[1], "nrms_model_tf.json")
+f = open(model_file, "w", encoding="UTF8")
+f.write(parameters_str)
+f.close()

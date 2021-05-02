@@ -26,6 +26,8 @@ class NRMSModel(BaseModel):
         hparam (obj): Global hyper-parameters.
     """
 
+    global_parameters = None
+
     def __init__(
         self, hparams, iterator_creator, seed=None,
     ):
@@ -107,10 +109,20 @@ class NRMSModel(BaseModel):
         )
 
         click_title_presents = layers.TimeDistributed(titleencoder)(his_input_title)
-        y = SelfAttention(hparams.head_num, hparams.head_dim, seed=self.seed)(
+        sa = SelfAttention(hparams.head_num, hparams.head_dim, seed=self.seed)
+        y = sa(
             [click_title_presents] * 3
         )
-        user_present = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
+        al2 = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)
+        user_present = al2(y)
+
+        if NRMSModel.global_parameters is not None:
+            NRMSModel.global_parameters.update({"userencoder.SelfAttention.WQ": sa.WQ.numpy().tolist()})
+            NRMSModel.global_parameters.update({"userencoder.SelfAttention.WK": sa.WK.numpy().tolist()})
+            NRMSModel.global_parameters.update({"userencoder.SelfAttention.WV": sa.WV.numpy().tolist()})
+            NRMSModel.global_parameters.update({"userencoder.AttLayer2.WQ": al2.W.numpy().tolist()})
+            NRMSModel.global_parameters.update({"userencoder.AttLayer2.WK": al2.b.numpy().tolist()})
+            NRMSModel.global_parameters.update({"userencoder.AttLayer2.WV": al2.q.numpy().tolist()})
 
         model = keras.Model(his_input_title, user_present, name="user_encoder")
         return model
@@ -130,10 +142,19 @@ class NRMSModel(BaseModel):
         embedded_sequences_title = embedding_layer(sequences_input_title)
 
         y = layers.Dropout(hparams.dropout)(embedded_sequences_title)
-        y = SelfAttention(hparams.head_num, hparams.head_dim, seed=self.seed)([y, y, y])
+        sa = SelfAttention(hparams.head_num, hparams.head_dim, seed=self.seed)
+        y = sa([y, y, y])
         y = layers.Dropout(hparams.dropout)(y)
-        pred_title = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
+        al2 = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)
+        pred_title = al2(y)
 
+        if NRMSModel.global_parameters is not None:
+            NRMSModel.global_parameters.update({"newsencoder.SelfAttention.WQ": sa.WQ.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.SelfAttention.WK": sa.WK.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.SelfAttention.WV": sa.WV.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.WQ": al2.W.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.WK": al2.b.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.WV": al2.q.numpy().tolist()})
         model = keras.Model(sequences_input_title, pred_title, name="news_encoder")
         return model
 
