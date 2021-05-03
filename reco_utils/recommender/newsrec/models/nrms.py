@@ -152,9 +152,9 @@ class NRMSModel(BaseModel):
             NRMSModel.global_parameters.update({"newsencoder.SelfAttention.WQ": sa.WQ.numpy().tolist()})
             NRMSModel.global_parameters.update({"newsencoder.SelfAttention.WK": sa.WK.numpy().tolist()})
             NRMSModel.global_parameters.update({"newsencoder.SelfAttention.WV": sa.WV.numpy().tolist()})
-            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.WQ": al2.W.numpy().tolist()})
-            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.WK": al2.b.numpy().tolist()})
-            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.WV": al2.q.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.W": al2.W.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.b": al2.b.numpy().tolist()})
+            NRMSModel.global_parameters.update({"newsencoder.AttLayer2.q": al2.q.numpy().tolist()})
         model = keras.Model(sequences_input_title, pred_title, name="news_encoder")
         return model
 
