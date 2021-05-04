@@ -436,9 +436,10 @@ class BaseModel:
                 user_vecs[impr_index],
             )
             if m is not None:
-                for i in range(len(news_index)):
-                    t = {"user": int(impr_index), "candidate": int(news_index[i]), "dot_product": float(pred[i])}
-                    user_candidate_scores.append(t)
+                t = {"impr_index": int(impr_index), "candidates": news_index.tolist(),
+                     "user_index": user_index,
+                     "dot_product": pred.tolist()}
+                user_candidate_scores.append(t)
             group_impr_indexes.append(impr_index)
             group_labels.append(label)
             group_preds.append(pred)
