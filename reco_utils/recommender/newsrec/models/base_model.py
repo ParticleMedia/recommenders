@@ -313,7 +313,7 @@ class BaseModel:
 
         return all_keys, all_labels, all_preds
 
-    def run_eval(self, news_filename, behaviors_file):
+    def run_eval(self, news_filename, behaviors_file, limit_news=-1, limit_users=-1, m=None):
         """Evaluate the given file and returns some evaluation metrics.
 
         Args:
@@ -325,7 +325,7 @@ class BaseModel:
 
         if self.support_quick_scoring:
             _, group_labels, group_preds = self.run_fast_eval(
-                news_filename, behaviors_file
+                news_filename, behaviors_file, limit_news, limit_users, m
             )
         else:
             _, group_labels, group_preds = self.run_slow_eval(
@@ -348,33 +348,48 @@ class BaseModel:
 
         return news_index, news_vec
 
-    def run_user(self, news_filename, behaviors_file):
+    def run_user(self, news_filename, behaviors_file, limit=-1, m=None):
         if not hasattr(self, "userencoder"):
             raise ValueError("model must have attribute userencoder")
 
         user_indexes = []
         user_vecs = []
+        clicked_titles = []
         for batch_data_input in tqdm(
             self.test_iterator.load_user_from_file(news_filename, behaviors_file)
         ):
             user_index, user_vec = self.user(batch_data_input)
             user_indexes.extend(np.reshape(user_index, -1))
             user_vecs.extend(user_vec)
-
+            if m is not None:
+                clicked_titles = clicked_titles + batch_data_input['clicked_title_batch'].tolist()
+            if 0 <= limit <= len(user_indexes):
+                break
+        if m is not None:
+            m.update({"clicked_titles": clicked_titles})
         return dict(zip(user_indexes, user_vecs))
 
-    def run_news(self, news_filename):
+    def run_news(self, news_filename, limit=-1, m=None):
         if not hasattr(self, "newsencoder"):
             raise ValueError("model must have attribute newsencoder")
 
         news_indexes = []
         news_vecs = []
+        candidate_titles = []
         for batch_data_input in tqdm(
             self.test_iterator.load_news_from_file(news_filename)
         ):
             news_index, news_vec = self.news(batch_data_input)
             news_indexes.extend(np.reshape(news_index, -1))
             news_vecs.extend(news_vec)
+            if m is not None:
+                candidate_title_batch = batch_data_input['candidate_title_batch']
+                candidate_title_batch = candidate_title_batch.tolist()
+                candidate_titles = candidate_titles + candidate_title_batch
+            if 0 <= limit <= len(news_indexes):
+                break
+        if m is not None:
+            m.update({'candidate_titles': candidate_titles})
 
         return dict(zip(news_indexes, news_vecs))
 
@@ -396,9 +411,9 @@ class BaseModel:
         )
         return group_impr_indexes, group_labels, group_preds
 
-    def run_fast_eval(self, news_filename, behaviors_file):
-        news_vecs = self.run_news(news_filename)
-        user_vecs = self.run_user(news_filename, behaviors_file)
+    def run_fast_eval(self, news_filename, behaviors_file, limit_news=-1, limit_users=-1, m=None):
+        news_vecs = self.run_news(news_filename, limit_news, m)
+        user_vecs = self.run_user(news_filename, behaviors_file, limit_users, m)
 
         self.news_vecs = news_vecs
         self.user_vecs = user_vecs
@@ -406,6 +421,7 @@ class BaseModel:
         group_impr_indexes = []
         group_labels = []
         group_preds = []
+        user_candidate_scores = []
 
         for (
             impr_index,
@@ -413,12 +429,20 @@ class BaseModel:
             user_index,
             label,
         ) in tqdm(self.test_iterator.load_impression_from_file(behaviors_file)):
+            if impr_index >= len(user_vecs):
+                break
             pred = np.dot(
                 np.stack([news_vecs[i] for i in news_index], axis=0),
                 user_vecs[impr_index],
             )
+            if m is not None:
+                for i in range(len(news_index)):
+                    t = {"user": int(impr_index), "candidate": int(news_index[i]), "dot_product": float(pred[i])}
+                    user_candidate_scores.append(t)
             group_impr_indexes.append(impr_index)
             group_labels.append(label)
             group_preds.append(pred)
 
+        if m is not None:
+            m.update({"user_candidate_scores": user_candidate_scores})
         return group_impr_indexes, group_labels, group_preds
