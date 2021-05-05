@@ -59,7 +59,8 @@ hparams = prepare_hparams(yaml_file,
                           batch_size=batch_size,
                           epochs=epochs,
                           show_step=10,
-                          run_eagerly=True)
+                          run_eagerly=True,
+                          use_mask=False)
 print(hparams)
 
 
