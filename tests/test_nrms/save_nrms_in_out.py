@@ -59,10 +59,9 @@ hparams = prepare_hparams(yaml_file,
 hparams.dropout = 0.0
 print(hparams)
 
-
-"""Train the NRMS model"""
 iterator = MINDIterator
 hparams.dropout = 0.0
+hparams.use_mask = False
 model = NRMSModel(hparams, iterator, seed=seed)
 m = {}
 model.run_eval(valid_news_file, valid_behaviors_file, -1, 60, m)
@@ -72,3 +71,14 @@ m_str = json.dumps(m)
 out_f.write(m_str)
 out_f.close()
 
+iterator = MINDIterator
+hparams.dropout = 0.0
+hparams.use_mask = True
+model = NRMSModel(hparams, iterator, seed=seed)
+m = {}
+model.run_eval(valid_news_file, valid_behaviors_file, -1, 60, m)
+out_dir = sys.argv[1]
+out_f = open(f"{out_dir}/tf_nrms_in_out_60_mask.json", "w", encoding="UTF8")
+m_str = json.dumps(m)
+out_f.write(m_str)
+out_f.close()

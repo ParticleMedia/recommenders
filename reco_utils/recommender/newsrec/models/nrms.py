@@ -109,7 +109,7 @@ class NRMSModel(BaseModel):
         )
 
         click_title_presents = layers.TimeDistributed(titleencoder)(his_input_title)
-        sa = SelfAttention(hparams.head_num, hparams.head_dim, seed=self.seed)
+        sa = SelfAttention(hparams.head_num, hparams.head_dim, mask_zeros=False, seed=self.seed)
         y = sa(
             [click_title_presents] * 3
         )
@@ -142,7 +142,7 @@ class NRMSModel(BaseModel):
         embedded_sequences_title = embedding_layer(sequences_input_title)
 
         y = layers.Dropout(hparams.dropout)(embedded_sequences_title)
-        sa = SelfAttention(hparams.head_num, hparams.head_dim, seed=self.seed)
+        sa = SelfAttention(hparams.head_num, hparams.head_dim, mask_zeros=hparams.use_mask, seed=self.seed)
         y = sa([y, y, y])
         y = layers.Dropout(hparams.dropout)(y)
         al2 = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)

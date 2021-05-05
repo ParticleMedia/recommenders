@@ -118,7 +118,7 @@ class SelfAttention(layers.Layer):
         obj: Weighted sum after attention.
     """
 
-    def __init__(self, multiheads, head_dim, seed=0, mask_right=False, **kwargs):
+    def __init__(self, multiheads, head_dim, seed=0, mask_right=False, mask_zeros=False, **kwargs):
         """Initialization steps for AttLayer2.
         
         Args:
@@ -131,6 +131,7 @@ class SelfAttention(layers.Layer):
         self.head_dim = head_dim
         self.output_dim = multiheads * head_dim
         self.mask_right = mask_right
+        self.mask_zeros = mask_zeros
         self.seed = seed
         self.diag_mask = self._set_diag_mask()
         super(SelfAttention, self).__init__(**kwargs)
@@ -218,6 +219,20 @@ class SelfAttention(layers.Layer):
             Q_len, V_len = None, None
         elif len(QKVs) == 5:
             Q_seq, K_seq, V_seq, Q_len, V_len = QKVs
+        if self.mask_zeros:
+            if Q_len is None:
+                Q_len = K.not_equal(Q_seq, 0)
+                Q_len = K.sum(K.cast(Q_len, "int32"), axis=-1)
+                Q_len = K.not_equal(K.cast(Q_len, "int32"), 0)
+                Q_len = K.sum(K.cast(Q_len, "int32"), axis=-1, keepdims=True)
+            if V_len is None:
+                V_len = K.not_equal(V_seq, 0)
+                V_len = K.sum(K.cast(V_len, "int32"), axis=-1)
+                V_len = K.not_equal(K.cast(V_len, "int32"), 0)
+                V_len = K.sum(K.cast(V_len, "int32"), axis=-1, keepdims=True)
+        else:
+            Q_len = None
+            V_len = None
         Q_seq = K.dot(Q_seq, self.WQ)
         Q_seq = K.reshape(
             Q_seq, shape=(-1, K.shape(Q_seq)[1], self.multiheads, self.head_dim)
